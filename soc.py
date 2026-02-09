@@ -6,87 +6,114 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
     "command",
-    choices=["explain", "mitre", "next","severity"],
+    choices=["explain", "mitre", "next", "severity"],
     help="SOC action to perform"
 )
 
 parser.add_argument(
     "input",
-    help="Event ID, log snippet, or incident description"
+    help="Event ID or incident description"
 )
 
 args = parser.parse_args()
 
 # ---------------- EXPLAIN ----------------
 if args.command == "explain":
-    print("[+] Explaining security event\n")
+    print("\n[+] Event Explanation\n")
 
     if "4625" in args.input:
-        print("Event ID 4625: Failed Logon Attempt\n")
-        print("What it means:")
-        print("- A user account failed to authenticate")
-        print("- Common in brute-force or password spray attacks\n")
+        print("Event ID 4625 – Failed Logon")
+        print("- Incorrect credentials")
+        print("- Brute-force or password spray attempt")
 
-        print("Possible causes:")
-        print("- Incorrect password")
-        print("- Brute-force attack")
-        print("- Password spraying")
-        print("- Disabled or locked account\n")
-
-        print("Initial SOC actions:")
-        print("- Identify source IP address")
-        print("- Check number of failed attempts")
-        print("- Correlate with successful logons")
-        print("- Validate if account is locked or disabled")
     elif "4624" in args.input:
-        print("Event ID 4624: Successful Logon")
-        print("Meaning:")
+        print("Event ID 4624 – Successful Logon")
         print("- User successfully authenticated")
-        print("SOC Note:")
-        print("- Check if preceded by multiple 4625 events")
+        print("- Validate logon type and source")
+
+    elif "4688" in args.input:
+        print("Event ID 4688 – Process Creation")
+        print("- A new process was executed")
+        print("- Common malware execution indicator")
+
+    elif "4672" in args.input:
+        print("Event ID 4672 – Privileged Logon")
+        print("- Admin-level privileges assigned")
+        print("- High-risk if unexpected")
+
+    elif "4720" in args.input:
+        print("Event ID 4720 – User Account Created")
+        print("- New account added to the system")
+
+    elif "4726" in args.input:
+        print("Event ID 4726 – User Account Deleted")
+        print("- Account removal detected")
+
+    elif "4732" in args.input:
+        print("Event ID 4732 – Added to Privileged Group")
+        print("- User added to admin group")
+
+    elif "4740" in args.input:
+        print("Event ID 4740 – Account Locked Out")
+        print("- Excessive authentication failures")
+
+    elif "4769" in args.input:
+        print("Event ID 4769 – Kerberos Ticket Requested")
+        print("- Can indicate Kerberoasting")
+
+    elif "1102" in args.input:
+        print("Event ID 1102 – Security Log Cleared")
+        print("- Strong attacker activity indicator")
+
     else:
-        print("Unknown event ID.")
-        print("Consider manual analysis or threat intelligence lookup.")
+        print("Unknown event – manual investigation required")
 
 # ---------------- MITRE ----------------
 elif args.command == "mitre":
-    print("[+] MITRE ATT&CK Mapping\n")
+    print("\n[+] MITRE ATT&CK Mapping\n")
 
-    if "4625" in args.input:
-        print("Event ID: 4625")
-        print("Technique: Brute Force")
-        print("MITRE ATT&CK ID: T1110")
-        print("Tactics: Credential Access")
+    mappings = {
+        "4625": ("Brute Force", "T1110", "Credential Access"),
+        "4624": ("Valid Accounts", "T1078", "Defense Evasion"),
+        "4688": ("Command Execution", "T1059", "Execution"),
+        "4672": ("Privilege Escalation", "T1068", "Privilege Escalation"),
+        "4720": ("Account Manipulation", "T1136", "Persistence"),
+        "4726": ("Defense Evasion", "T1070", "Defense Evasion"),
+        "4732": ("Account Manipulation", "T1098", "Persistence"),
+        "4740": ("Brute Force", "T1110", "Credential Access"),
+        "4769": ("Kerberoasting", "T1558", "Credential Access"),
+        "1102": ("Indicator Removal", "T1070", "Defense Evasion")
+    }
 
+    for key in mappings:
+        if key in args.input:
+            technique, tid, tactic = mappings[key]
+            print(f"Technique: {technique}")
+            print(f"ATT&CK ID: {tid}")
+            print(f"Tactic: {tactic}")
+            break
     else:
-        print("No MITRE mapping available for this input.")
+        print("No MITRE mapping available")
 
 # ---------------- NEXT STEPS ----------------
 elif args.command == "next":
-    print("[+] Recommended Investigation Steps\n")
+    print("\n[+] Recommended Investigation Steps\n")
 
-    if "4625" in args.input:
-        print("1. Identify source IP and geolocation")
-        print("2. Check for multiple accounts from same IP")
-        print("3. Review account lockout events")
-        print("4. Search for successful logons after failures")
-        print("5. Check for lateral movement indicators")
-        print("6. Escalate if pattern suggests attack")
+    print("- Identify source host and IP")
+    print("- Correlate with adjacent security events")
+    print("- Validate user and asset criticality")
+    print("- Check for lateral movement")
+    print("- Escalate if attacker behavior suspected")
 
-    else:
-        print("Define investigation steps manually.")
-    # ---------------- SEVERITY ----------------
+# ---------------- SEVERITY ----------------
 elif args.command == "severity":
-    print("[+] Severity Assessment\n")
+    print("\n[+] Severity Assessment\n")
 
-    if "4625" in args.input:
-        print("Event ID: 4625")
+    if any(x in args.input for x in ["1102", "4732", "4672"]):
+        print("Severity: CRITICAL")
+
+    elif any(x in args.input for x in ["4625", "4688", "4769"]):
         print("Severity: HIGH")
-        print("Reason:")
-        print("- Repeated authentication failures")
-        print("- Possible brute-force or password spray attack")
-        print("- High risk to account security")
 
     else:
-        print("Severity: LOW")
-        print("Reason: Unknown or isolated event")    
+        print("Severity: MEDIUM")
