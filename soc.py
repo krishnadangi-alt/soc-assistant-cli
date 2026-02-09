@@ -1,119 +1,219 @@
 import argparse
 
+# ----------------------------
+# Argument Parser
+# ----------------------------
 parser = argparse.ArgumentParser(
-    description="SOC Assistant CLI powered by GitHub Copilot"
+    description="SOC Assistant CLI - Windows Security Events"
 )
 
 parser.add_argument(
     "command",
-    choices=["explain", "mitre", "next", "severity"],
+    choices=["explain", "mitre", "severity", "next"],
     help="SOC action to perform"
 )
 
 parser.add_argument(
-    "input",
-    help="Event ID or incident description"
+    "event_id",
+    help="Windows Event ID (e.g., 4625, 4624, 1102)"
 )
 
 args = parser.parse_args()
+event = args.event_id
 
-# ---------------- EXPLAIN ----------------
-if args.command == "explain":
-    print("\n[+] Event Explanation\n")
+# ----------------------------
+# Event Database
+# ----------------------------
+EVENTS = {
+    "4625": {
+        "name": "Failed Logon Attempt",
+        "mitre": ("T1110", "Brute Force", "Credential Access"),
+        "severity": "HIGH",
+        "reason": [
+            "Repeated authentication failures",
+            "Possible brute-force or password spraying attack"
+        ],
+        "next": [
+            "Identify source IP and geolocation",
+            "Check failed attempts per account and IP",
+            "Analyze logon type (2, 3, 10)",
+            "Correlate with successful logons (4624)",
+            "Check account lockout events (4740)"
+        ]
+    },
 
-    if "4625" in args.input:
-        print("Event ID 4625 – Failed Logon")
-        print("- Incorrect credentials")
-        print("- Brute-force or password spray attempt")
+    "4624": {
+        "name": "Successful Logon",
+        "mitre": ("T1078", "Valid Accounts", "Initial Access"),
+        "severity": "MEDIUM",
+        "reason": [
+            "Valid authentication occurred",
+            "May indicate compromised credentials if suspicious"
+        ],
+        "next": [
+            "Verify logon source and time",
+            "Check if preceded by failed logons",
+            "Validate user role and behavior",
+            "Check logon type (interactive, network, RDP)"
+        ]
+    },
 
-    elif "4624" in args.input:
-        print("Event ID 4624 – Successful Logon")
-        print("- User successfully authenticated")
-        print("- Validate logon type and source")
+    "1102": {
+        "name": "Security Log Cleared",
+        "mitre": ("T1070", "Indicator Removal", "Defense Evasion"),
+        "severity": "CRITICAL",
+        "reason": [
+            "Security logs cleared",
+            "Strong indicator of attacker activity"
+        ],
+        "next": [
+            "Identify user who cleared logs",
+            "Check recent admin activity",
+            "Correlate with privilege escalation events",
+            "Escalate incident immediately"
+        ]
+    },
 
-    elif "4688" in args.input:
-        print("Event ID 4688 – Process Creation")
-        print("- A new process was executed")
-        print("- Common malware execution indicator")
+    "4672": {
+        "name": "Special Privileges Assigned",
+        "mitre": ("T1068", "Privilege Escalation", "Privilege Escalation"),
+        "severity": "HIGH",
+        "reason": [
+            "Admin-level privileges granted",
+            "Potential privilege abuse"
+        ],
+        "next": [
+            "Identify account granted privileges",
+            "Verify authorization",
+            "Check recent login history",
+            "Monitor follow-up activity"
+        ]
+    },
 
-    elif "4672" in args.input:
-        print("Event ID 4672 – Privileged Logon")
-        print("- Admin-level privileges assigned")
-        print("- High-risk if unexpected")
+    "4688": {
+        "name": "Process Creation",
+        "mitre": ("T1059", "Command Execution", "Execution"),
+        "severity": "MEDIUM",
+        "reason": [
+            "New process created",
+            "Could indicate malicious execution"
+        ],
+        "next": [
+            "Review process name and command line",
+            "Check parent process",
+            "Validate binary reputation",
+            "Look for persistence indicators"
+        ]
+    },
 
-    elif "4720" in args.input:
-        print("Event ID 4720 – User Account Created")
-        print("- New account added to the system")
+    "4697": {
+        "name": "Service Installed",
+        "mitre": ("T1543", "Create or Modify Service", "Persistence"),
+        "severity": "HIGH",
+        "reason": [
+            "New service installed",
+            "Possible persistence mechanism"
+        ],
+        "next": [
+            "Identify service name and path",
+            "Validate service legitimacy",
+            "Check creator account",
+            "Scan associated binaries"
+        ]
+    },
 
-    elif "4726" in args.input:
-        print("Event ID 4726 – User Account Deleted")
-        print("- Account removal detected")
+    "4720": {
+        "name": "User Account Created",
+        "mitre": ("T1136", "Create Account", "Persistence"),
+        "severity": "HIGH",
+        "reason": [
+            "New user account created",
+            "Potential backdoor account"
+        ],
+        "next": [
+            "Verify account creator",
+            "Check group memberships",
+            "Confirm business justification",
+            "Disable account if suspicious"
+        ]
+    },
 
-    elif "4732" in args.input:
-        print("Event ID 4732 – Added to Privileged Group")
-        print("- User added to admin group")
+    "4732": {
+        "name": "User Added to Privileged Group",
+        "mitre": ("T1098", "Account Manipulation", "Persistence"),
+        "severity": "CRITICAL",
+        "reason": [
+            "User added to admin group",
+            "High-impact privilege escalation"
+        ],
+        "next": [
+            "Identify added user and group",
+            "Verify approval",
+            "Check subsequent actions",
+            "Revoke access if unauthorized"
+        ]
+    },
 
-    elif "4740" in args.input:
-        print("Event ID 4740 – Account Locked Out")
-        print("- Excessive authentication failures")
+    "4769": {
+        "name": "Kerberos Service Ticket Requested",
+        "mitre": ("T1558", "Kerberoasting", "Credential Access"),
+        "severity": "HIGH",
+        "reason": [
+            "Suspicious Kerberos ticket requests",
+            "Possible credential extraction attempt"
+        ],
+        "next": [
+            "Identify requesting account",
+            "Check service account exposure",
+            "Monitor ticket request volume",
+            "Reset compromised credentials"
+        ]
+    },
 
-    elif "4769" in args.input:
-        print("Event ID 4769 – Kerberos Ticket Requested")
-        print("- Can indicate Kerberoasting")
-
-    elif "1102" in args.input:
-        print("Event ID 1102 – Security Log Cleared")
-        print("- Strong attacker activity indicator")
-
-    else:
-        print("Unknown event – manual investigation required")
-
-# ---------------- MITRE ----------------
-elif args.command == "mitre":
-    print("\n[+] MITRE ATT&CK Mapping\n")
-
-    mappings = {
-        "4625": ("Brute Force", "T1110", "Credential Access"),
-        "4624": ("Valid Accounts", "T1078", "Defense Evasion"),
-        "4688": ("Command Execution", "T1059", "Execution"),
-        "4672": ("Privilege Escalation", "T1068", "Privilege Escalation"),
-        "4720": ("Account Manipulation", "T1136", "Persistence"),
-        "4726": ("Defense Evasion", "T1070", "Defense Evasion"),
-        "4732": ("Account Manipulation", "T1098", "Persistence"),
-        "4740": ("Brute Force", "T1110", "Credential Access"),
-        "4769": ("Kerberoasting", "T1558", "Credential Access"),
-        "1102": ("Indicator Removal", "T1070", "Defense Evasion")
+    "4740": {
+        "name": "Account Locked Out",
+        "mitre": ("T1110", "Brute Force", "Credential Access"),
+        "severity": "MEDIUM",
+        "reason": [
+            "Account lockout detected",
+            "Likely password attack"
+        ],
+        "next": [
+            "Identify lockout source",
+            "Check related failed logons",
+            "Notify user",
+            "Reset password if required"
+        ]
     }
+}
 
-    for key in mappings:
-        if key in args.input:
-            technique, tid, tactic = mappings[key]
-            print(f"Technique: {technique}")
-            print(f"ATT&CK ID: {tid}")
-            print(f"Tactic: {tactic}")
-            break
-    else:
-        print("No MITRE mapping available")
+# ----------------------------
+# Command Handling
+# ----------------------------
+if event not in EVENTS:
+    print("Unknown Event ID. Please investigate manually.")
+    exit()
 
-# ---------------- NEXT STEPS ----------------
-elif args.command == "next":
-    print("\n[+] Recommended Investigation Steps\n")
+data = EVENTS[event]
 
-    print("- Identify source host and IP")
-    print("- Correlate with adjacent security events")
-    print("- Validate user and asset criticality")
-    print("- Check for lateral movement")
-    print("- Escalate if attacker behavior suspected")
+if args.command == "explain":
+    print(f"Event ID {event}: {data['name']}")
 
-# ---------------- SEVERITY ----------------
+elif args.command == "mitre":
+    tid, technique, tactic = data["mitre"]
+    print("MITRE ATT&CK Mapping")
+    print(f"Technique: {technique}")
+    print(f"ATT&CK ID: {tid}")
+    print(f"Tactic: {tactic}")
+
 elif args.command == "severity":
-    print("\n[+] Severity Assessment\n")
+    print("Severity Assessment")
+    print(f"Severity: {data['severity']}")
+    print("Reason:")
+    for r in data["reason"]:
+        print(f"- {r}")
 
-    if any(x in args.input for x in ["1102", "4732", "4672"]):
-        print("Severity: CRITICAL")
-
-    elif any(x in args.input for x in ["4625", "4688", "4769"]):
-        print("Severity: HIGH")
-
-    else:
-        print("Severity: MEDIUM")
+elif args.command == "next":
+    print("Recommended Investigation Steps")
+    for step in data["next"]:
+        print(f"- {step}")
