@@ -1,5 +1,5 @@
 import argparse
-
+import sys
 # ----------------------------
 # Argument Parser
 # ----------------------------
@@ -9,17 +9,19 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
     "command",
-    choices=["explain", "mitre", "severity", "next"],
+    choices=["explain", "mitre", "severity", "next","correlate"],
     help="SOC action to perform"
 )
 
 parser.add_argument(
     "event_id",
+    nargs="+",
     help="Windows Event ID (e.g., 4625, 4624, 1102)"
 )
 
 args = parser.parse_args()
-event = args.event_id
+events_input = args.event_id
+event = events_input[0]   
 
 # ----------------------------
 # Event Database
@@ -217,3 +219,29 @@ elif args.command == "next":
     print("Recommended Investigation Steps")
     for step in data["next"]:
         print(f"- {step}")
+elif args.command == "correlate":
+    events = events_input
+
+    print("[+] Running Correlation Analysis...\n")
+
+    if events.count("4625") >= 3 and "4624" in events:
+        print("Detected Pattern: Brute Force → Successful Login")
+        print("Risk Level: HIGH")
+        print("Reason: Multiple failed logons followed by success.")
+        print("\nRecommended SOC Actions:")
+        print("- Investigate source IP")
+        print("- Force password reset")
+        print("- Check for lateral movement")
+
+    elif "4769" in events and "4624" in events:
+        print("Detected Pattern: Possible Kerberoasting Activity")
+        print("Risk Level: HIGH")
+        print("Reason: Suspicious Kerberos ticket activity followed by login.")
+
+    elif "1102" in events:
+        print("Detected Pattern: Log Tampering Detected")
+        print("Risk Level: CRITICAL")
+        print("Reason: Security log cleared after suspicious activity.")
+
+    else:
+        print("No known attack chain detected.")
