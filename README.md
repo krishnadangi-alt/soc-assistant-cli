@@ -1,60 +1,59 @@
-\# SOC Assistant CLI 🔐🛡️
-
-
-
-A Python-based \*\*SOC (Security Operations Center) Assistant CLI\*\* designed to help analysts quickly \*\*understand Windows Security Events\*\*, map them to \*\*MITRE ATT\&CK\*\*, assess \*\*severity\*\*, and follow \*\*recommended investigation steps\*\*.
-
-
-
-This tool is ideal for:
-
-\- SOC Analysts (Tier 1 / Tier 2)
-
-\- Blue Team beginners
-
-\- Cybersecurity students
-
-\- Incident response labs \& competitions
-
-
+# SOC Assistant CLI 🔐🛡️  
+*A Command-Line Companion for SOC Analysts*
 
 ---
 
+## 📌 Overview
 
+SOC Assistant CLI is a Python-based Security Operations Center tool built to help analysts quickly analyze Windows Security Event IDs without switching between documentation, MITRE ATT&CK, and external references.
 
-\## 🚀 Features
+It provides:
 
+- Instant event explanation  
+- MITRE ATT&CK mapping  
+- Severity classification  
+- Structured investigation steps  
+- Basic attack chain correlation  
 
+Built using GitHub Copilot CLI to enhance structured logic, investigation mapping, and workflow optimization.
+
+---
+
+## 🎯 Why This Project Matters
+
+SOC analysts often lose valuable time:
+
+- Searching Microsoft documentation
+- Checking MITRE ATT&CK website
+- Writing manual triage notes
+- Correlating related events manually
+
+This tool reduces investigation time by bringing all critical triage information directly into the terminal.
+
+⚡ Fast  
+🔌 Offline  
+🧠 Structured  
+📊 Investigation-ready  
+
+---
+
+## 🚀 Features
 
 ✅ Explain Windows Security Event IDs  
-
-✅ MITRE ATT\&CK technique \& tactic mapping  
-
+✅ MITRE ATT&CK technique & tactic mapping  
 ✅ Severity classification (LOW / MEDIUM / HIGH / CRITICAL)  
-
 ✅ Step-by-step investigation guidance  
-
-✅ Covers \*\*Top 10 common SOC Windows Events\*\*  
-
-✅ Simple CLI interface (fast \& offline)
-
-
+✅ Correlation detection (basic attack chain patterns)  
+✅ Covers Top 10 high-frequency SOC Windows Events  
+✅ Simple CLI interface  
 
 ---
 
-
-
-\## 🖥️ Supported Commands
-
-
+## 🖥️ Supported Commands
 
 ```bash
-
-python soc.py explain <EVENT\_ID>
-
-python soc.py mitre <EVENT\_ID>
-
-python soc.py severity <EVENT\_ID>
-
-python soc.py next <EVENT\_ID>
-
+python soc.py explain <EVENT_ID>
+python soc.py mitre <EVENT_ID>
+python soc.py severity <EVENT_ID>
+python soc.py next <EVENT_ID>
+python soc.py correlate "<EVENT_ID EVENT_ID EVENT_ID>"
